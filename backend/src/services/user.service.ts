@@ -1,13 +1,15 @@
-import UserModel from '../models/user.model';
-import { BadRequestException } from '../utils/appError';
+import UserModel from '../models/user.model'; // Import UserModel
+import { BadRequestException } from '../utils/appError'; // Import BadRequestException
 
 export const getCurrentUserService = async (userId: string) => {
-  const user = await UserModel.findById(userId)
-    .populate('currentWorkspace')
-    .select('-password');
+  // Define the getCurrentUserService function
+  const user = await UserModel.findById(userId) // Find the user by ID
+    .populate('currentWorkspace') // Populate the current workspace
+    .select('-password'); // Exclude the password field
   if (!user) {
-    throw new BadRequestException('User not found');
+    // If the user is not found
+    throw new BadRequestException('User not found'); // Throw a BadRequestException
   }
-  return { user };
+  return { user }; // Return the user
 };
 
