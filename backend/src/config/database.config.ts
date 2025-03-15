@@ -13,3 +13,4 @@ const connectDatabase = async () => {
 };
 
 export default connectDatabase; // Export the connectDatabase function as the default export
+
