@@ -4,7 +4,10 @@ import MemberModel from '../models/member.model'; // Import MemberModel
 import RoleModel from '../models/roles-permission.model'; // Import RoleModel
 import UserModel from '../models/user.model'; // Import UserModel
 import WorkspaceModel from '../models/workspace.model'; // Import WorkspaceModel
-import { NotFoundException } from '../utils/appError'; // Import NotFoundException
+import { BadRequestException, NotFoundException } from '../utils/appError'; // Import NotFoundException
+import TaskModel from '../models/task.model';
+import { TaskStatusEnum } from '../enums/task.enum';
+import ProjectModel from '../models/project.model';
 
 export const createWorkSpaceService = async (
   // Define the createWorkSpaceService function
@@ -113,5 +116,125 @@ export const getWorkspaceMembersService = async (workspaceId: string) => {
     members,
     roles,
   };
+};
+
+export const getWorkspaceAnalyticsService = async (workspaceId: string) => {
+  const currentDate = new Date();
+  const totalTasks = await TaskModel.countDocuments({
+    workspace: workspaceId,
+  });
+  const overDueTasks = await TaskModel.countDocuments({
+    workspace: workspaceId,
+    dueDate: { $lt: currentDate },
+    status: {
+      $ne: TaskStatusEnum.DONE,
+    },
+  });
+  const complatedTasks = await TaskModel.countDocuments({
+    workspace: workspaceId,
+    status: TaskStatusEnum.DONE,
+  });
+  const analytics = {
+    totalTasks,
+    overDueTasks,
+    complatedTasks,
+  };
+  return {
+    analytics,
+  };
+};
+
+export const changeMemberRoleService = async (
+  workspaceId: string,
+  memberId: string,
+  roleId: string
+) => {
+  const workspace = await WorkspaceModel.findById(workspaceId);
+  if (!workspace) {
+    throw new NotFoundException('Workspace not found');
+  }
+
+  const role = await RoleModel.findById(roleId);
+  if (!role) {
+    throw new NotFoundException('Role not found');
+  }
+
+  const member = await MemberModel.findOne({
+    workspaceId,
+    userId: memberId,
+  });
+
+  if (!member) {
+    throw new NotFoundException('Member not found in the workspace');
+  }
+
+  member.role = role;
+  await member.save();
+
+  return {
+    member,
+  };
+};
+
+export const updateWorkspaceByIdService = async (
+  workspaceId: string,
+  name: string,
+  description?: string
+) => {
+  const workspace = await WorkspaceModel.findById(workspaceId);
+  if (!workspace) {
+    throw new NotFoundException('Workspace not found');
+  }
+  name && (workspace.name = name);
+  description && (workspace.description = description);
+  await workspace.save();
+  return {
+    workspace,
+  };
+};
+
+export const deleteWorkspaceByIdService = async (workspaceId: string, userId: string) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const workspace = await WorkspaceModel.findById(workspaceId).session(session);
+    if (!workspace) {
+      throw new NotFoundException('Workspace not found');
+    }
+    const user = await UserModel.findById(userId).session(session);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (workspace.owner.toString() !== userId) {
+      throw new BadRequestException('You are not the owner of this workspace');
+    }
+
+    await ProjectModel.deleteMany({ workspace: workspace._id }).session(session);
+    await TaskModel.deleteMany({ workspace: workspace._id }).session(session);
+    await MemberModel.deleteMany({ workspaceId: workspace._id }).session(session);
+
+    if (user?.currentWorkspace?.equals(workspaceId)) {
+      const memeberWorkspace = await MemberModel.findOne({
+        userId,
+      }).session(session);
+      user.currentWorkspace = memeberWorkspace?.workspaceId || null;
+      await user.save({ session });
+    }
+
+    await workspace.deleteOne({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+    return {
+      currentWorkspace: user?.currentWorkspace,
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  } finally {
+    session.endSession();
+  }
 };
 
