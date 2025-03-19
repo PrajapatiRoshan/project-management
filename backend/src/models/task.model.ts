@@ -13,7 +13,7 @@ export interface TaskDocument extends Document {
   description: string | null;
   project: mongoose.Types.ObjectId;
   workspace: mongoose.Types.ObjectId;
-  assignedTo: mongoose.Types.ObjectId;
+  assignedTo: mongoose.Types.ObjectId | null;
   createdBy: mongoose.Types.ObjectId;
   status: TaskStatusEnumType;
   priority: TaskPriorityEnumType;
@@ -53,7 +53,6 @@ const taskSchema = new Schema<TaskDocument>(
     assignedTo: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
       default: null,
     },
     createdBy: {
@@ -83,3 +82,4 @@ const taskSchema = new Schema<TaskDocument>(
 
 export const TaskModel = mongoose.model<TaskDocument>('Task', taskSchema);
 export default TaskModel;
+
