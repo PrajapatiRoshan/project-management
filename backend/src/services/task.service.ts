@@ -2,6 +2,7 @@ import { TaskPriorityEnum, TaskStatusEnum } from '../enums/task.enum';
 import MemberModel from '../models/member.model';
 import ProjectModel from '../models/project.model';
 import TaskModel from '../models/task.model';
+import WorkspaceModel from '../models/workspace.model';
 import { BadRequestException, NotFoundException } from '../utils/appError';
 
 export const createTaskService = async (
@@ -142,14 +143,63 @@ export const getAllTasksService = async (
   }
 
   const skip = (pageNumber - 1) * pageSize;
-  const [tasks, totalTasks] = await Promise.all([
+  const [tasks, totalCount] = await Promise.all([
     TaskModel.find(query)
       .skip(skip)
       .limit(pageSize)
       .sort({ createdAt: -1 })
-      .populate('assignedTo', '_id name profilePicture'),
+      .populate('assignedTo', '_id name profilePicture -password')
+      .populate('project', '_id emoji name'),
+    TaskModel.countDocuments(query),
   ]);
+  const totalPages = Math.ceil(totalCount / pageSize);
+  return {
+    tasks,
+    paginaion: {
+      pageSize,
+      pageNumber,
+      totalCount,
+      totalPages,
+      skip,
+    },
+  };
+};
 
-  return { tasks, totalTasks };
+export const getTaskByIdService = async (
+  workspaceId: string,
+  projectId: string,
+  taskId: string
+) => {
+  const project = await ProjectModel.findById(projectId);
+
+  if (!project || project.workspace.toString() !== workspaceId) {
+    throw new NotFoundException('Project not found');
+  }
+
+  const task = await TaskModel.findOne({
+    _id: taskId,
+    project: projectId,
+    workspace: workspaceId,
+  }).populate('assignedTo', '_id name profilePicture -password');
+
+  if (!task) {
+    throw new NotFoundException('Task not found');
+  }
+
+  return {
+    task,
+  };
+};
+
+export const deleteTaskByIdService = async (workspaceId: string, taskId: string) => {
+  const task = await TaskModel.findOneAndDelete({
+    _id: taskId,
+    workspace: workspaceId,
+  });
+  if (!task) {
+    throw new NotFoundException('Task not found or does not belong to this');
+  }
+
+  return { task };
 };
 
