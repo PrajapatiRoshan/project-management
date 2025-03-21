@@ -4,237 +4,195 @@ import MemberModel from '../models/member.model'; // Import MemberModel
 import RoleModel from '../models/roles-permission.model'; // Import RoleModel
 import UserModel from '../models/user.model'; // Import UserModel
 import WorkspaceModel from '../models/workspace.model'; // Import WorkspaceModel
-import { BadRequestException, NotFoundException } from '../utils/appError'; // Import NotFoundException
-import TaskModel from '../models/task.model';
-import { TaskStatusEnum } from '../enums/task.enum';
-import ProjectModel from '../models/project.model';
+import { BadRequestException, NotFoundException } from '../utils/appError'; // Import custom exceptions
+import TaskModel from '../models/task.model'; // Import TaskModel
+import { TaskStatusEnum } from '../enums/task.enum'; // Import TaskStatusEnum
+import ProjectModel from '../models/project.model'; // Import ProjectModel
 
 export const createWorkSpaceService = async (
-  // Define the createWorkSpaceService function
-  userId: string, // The user ID
-  body: {
-    // The request body
-    name: string; // The workspace name
-    description?: string | undefined; // The workspace description (optional)
-  }
+  userId: string, // The ID of the user creating the workspace
+  body: { name: string; description?: string } // The request body containing workspace details
 ) => {
-  const { name, description } = body; // Destructure the name and description from the body
+  const { name, description } = body; // Destructure name and description from the body
 
-  const user = await UserModel.findById(userId); // Find the user by ID
-
+  const user = await UserModel.findById(userId); // Find the user by their ID
   if (!user) {
-    // If the user is not found
-    throw new NotFoundException('User not found'); // Throw a NotFoundException
+    throw new NotFoundException('User not found'); // Throw an error if the user is not found
   }
-  const ownerRole = await RoleModel.findOne({
-    // Find the owner role
-    name: Roles.OWNER, // The role name should be OWNER
-  });
+
+  const ownerRole = await RoleModel.findOne({ name: Roles.OWNER }); // Find the owner role
   if (!ownerRole) {
-    // If the owner role is not found
-    throw new NotFoundException('Owner role not found'); // Throw a NotFoundException
+    throw new NotFoundException('Owner role not found'); // Throw an error if the owner role is not found
   }
 
   const workspace = new WorkspaceModel({
-    // Create a new workspace
     name, // Set the workspace name
     description, // Set the workspace description
-    owner: user._id, // Set the workspace owner
+    owner: user._id, // Set the owner of the workspace
   });
-  await workspace.save(); // Save the workspace
+  await workspace.save(); // Save the workspace to the database
 
   const member = new MemberModel({
-    // Create a new member
     userId: user._id, // Set the user ID
     workspaceId: workspace._id, // Set the workspace ID
     role: ownerRole._id, // Set the role ID
-    joinedAt: new Date(), // Set the joined date
+    joinedAt: new Date(), // Set the join date
   });
-  await member.save(); // Save the member
+  await member.save(); // Save the member to the database
 
-  user.currentWorkspace = workspace._id as mongoose.Types.ObjectId; // Set the user's current workspace
+  user.currentWorkspace = workspace._id as mongoose.Types.ObjectId; // Update the user's current workspace
   await user.save(); // Save the user
 
-  return { workspace }; // Return the workspace
+  return { workspace }; // Return the created workspace
 };
 
 export const getAllWorkspacesUserIsMemberService = async (userId: string) => {
-  // Define the getAllWorkspacesUserIsMemberService function
   const memberships = await MemberModel.find({ userId }) // Find all memberships for the user
-    .populate('workspaceId') // Populate the workspace ID
+    .populate('workspaceId') // Populate the workspace details
     .select('-password') // Exclude the password field
     .exec(); // Execute the query
 
-  const workspaces = memberships.map((member) => member.workspaceId); // Map the memberships to workspaces
-  return { workspaces }; // Return the workspaces
+  const workspaces = memberships.map((member) => member.workspaceId); // Extract workspace IDs from memberships
+  return { workspaces }; // Return the list of workspaces
 };
 
 export const getWorkspaceByIdService = async (workspaceId: string) => {
-  // Define the getWorkspaceByIdService function
   const workspace = await WorkspaceModel.findById(workspaceId); // Find the workspace by ID
-
   if (!workspace) {
-    // If the workspace is not found
-    throw new NotFoundException('Workspace not found'); // Throw a NotFoundException
+    throw new NotFoundException('Workspace not found'); // Throw an error if the workspace is not found
   }
-  const members = await MemberModel.find({
-    // Find all members of the workspace
-    workspaceId, // The workspace ID
-  }).populate('role'); // Populate the role
+
+  const members = await MemberModel.find({ workspaceId }) // Find all members of the workspace
+    .populate('role'); // Populate the role details
 
   const workspaceWithMembers = {
-    // Create an object with the workspace and its members
-    ...workspace.toObject(), // Convert the workspace to an object
-    members, // Add the members
+    ...workspace.toObject(), // Convert the workspace to a plain object
+    members, // Add the members to the workspace object
   };
 
-  return {
-    // Return the workspace with members
-    workspace: workspaceWithMembers,
-  };
+  return { workspace: workspaceWithMembers }; // Return the workspace with members
 };
 
 export const getWorkspaceMembersService = async (workspaceId: string) => {
-  // Define the getWorkspaceMembersService function
   const members = await MemberModel.find({ workspaceId }) // Find all members of the workspace
-    .populate('userId', 'name email profilePicture -password') // Populate the user ID with name, email, and profile picture, excluding the password
-    .populate('role', 'name'); // Populate the role with name
+    .populate('userId', 'name email profilePicture -password') // Populate user details excluding the password
+    .populate('role', 'name'); // Populate role details
 
-  const roles = await RoleModel.find(
-    // Find all roles
-    {}, // No filter
-    {
-      name: 1, // Include the name field
-      _id: 1, // Include the _id field
-    }
-  )
+  const roles = await RoleModel.find({}, { name: 1, _id: 1 }) // Find all roles with only name and ID
     .select('-permission') // Exclude the permission field
     .lean(); // Return plain JavaScript objects
 
-  return {
-    // Return the members and roles
-    members,
-    roles,
-  };
+  return { members, roles }; // Return the members and roles
 };
 
 export const getWorkspaceAnalyticsService = async (workspaceId: string) => {
-  const currentDate = new Date();
-  const totalTasks = await TaskModel.countDocuments({
-    workspace: workspaceId,
-  });
+  const currentDate = new Date(); // Get the current date
+  const totalTasks = await TaskModel.countDocuments({ workspace: workspaceId }); // Count total tasks in the workspace
   const overDueTasks = await TaskModel.countDocuments({
-    workspace: workspaceId,
-    dueDate: { $lt: currentDate },
-    status: {
-      $ne: TaskStatusEnum.DONE,
-    },
+    workspace: workspaceId, // Filter by workspace ID
+    dueDate: { $lt: currentDate }, // Filter tasks with due dates in the past
+    status: { $ne: TaskStatusEnum.DONE }, // Exclude completed tasks
   });
   const complatedTasks = await TaskModel.countDocuments({
-    workspace: workspaceId,
-    status: TaskStatusEnum.DONE,
+    workspace: workspaceId, // Filter by workspace ID
+    status: TaskStatusEnum.DONE, // Filter completed tasks
   });
+
   const analytics = {
-    totalTasks,
-    overDueTasks,
-    complatedTasks,
+    totalTasks, // Total number of tasks
+    overDueTasks, // Number of overdue tasks
+    complatedTasks, // Number of completed tasks
   };
-  return {
-    analytics,
-  };
+
+  return { analytics }; // Return the analytics data
 };
 
 export const changeMemberRoleService = async (
-  workspaceId: string,
-  memberId: string,
-  roleId: string
+  workspaceId: string, // The ID of the workspace
+  memberId: string, // The ID of the member
+  roleId: string // The ID of the new role
 ) => {
-  const workspace = await WorkspaceModel.findById(workspaceId);
+  const workspace = await WorkspaceModel.findById(workspaceId); // Find the workspace by ID
   if (!workspace) {
-    throw new NotFoundException('Workspace not found');
+    throw new NotFoundException('Workspace not found'); // Throw an error if the workspace is not found
   }
 
-  const role = await RoleModel.findById(roleId);
+  const role = await RoleModel.findById(roleId); // Find the role by ID
   if (!role) {
-    throw new NotFoundException('Role not found');
+    throw new NotFoundException('Role not found'); // Throw an error if the role is not found
   }
 
-  const member = await MemberModel.findOne({
-    workspaceId,
-    userId: memberId,
-  });
-
+  const member = await MemberModel.findOne({ workspaceId, userId: memberId }); // Find the member in the workspace
   if (!member) {
-    throw new NotFoundException('Member not found in the workspace');
+    throw new NotFoundException('Member not found in the workspace'); // Throw an error if the member is not found
   }
 
-  member.role = role;
-  await member.save();
+  member.role = role; // Update the member's role
+  await member.save(); // Save the updated member
 
-  return {
-    member,
-  };
+  return { member }; // Return the updated member
 };
 
 export const updateWorkspaceByIdService = async (
-  workspaceId: string,
-  name: string,
-  description?: string
+  workspaceId: string, // The ID of the workspace
+  name: string, // The new name for the workspace
+  description?: string // The new description for the workspace (optional)
 ) => {
-  const workspace = await WorkspaceModel.findById(workspaceId);
+  const workspace = await WorkspaceModel.findById(workspaceId); // Find the workspace by ID
   if (!workspace) {
-    throw new NotFoundException('Workspace not found');
+    throw new NotFoundException('Workspace not found'); // Throw an error if the workspace is not found
   }
-  name && (workspace.name = name);
-  description && (workspace.description = description);
-  await workspace.save();
-  return {
-    workspace,
-  };
+
+  name && (workspace.name = name); // Update the name if provided
+  description && (workspace.description = description); // Update the description if provided
+  await workspace.save(); // Save the updated workspace
+
+  return { workspace }; // Return the updated workspace
 };
 
-export const deleteWorkspaceByIdService = async (workspaceId: string, userId: string) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+export const deleteWorkspaceByIdService = async (
+  workspaceId: string, // The ID of the workspace
+  userId: string // The ID of the user attempting to delete the workspace
+) => {
+  const session = await mongoose.startSession(); // Start a new database session
+  session.startTransaction(); // Begin a transaction
 
   try {
-    const workspace = await WorkspaceModel.findById(workspaceId).session(session);
+    const workspace = await WorkspaceModel.findById(workspaceId).session(session); // Find the workspace by ID
     if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-    const user = await UserModel.findById(userId).session(session);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    if (workspace.owner.toString() !== userId) {
-      throw new BadRequestException('You are not the owner of this workspace');
+      throw new NotFoundException('Workspace not found'); // Throw an error if the workspace is not found
     }
 
-    await ProjectModel.deleteMany({ workspace: workspace._id }).session(session);
-    await TaskModel.deleteMany({ workspace: workspace._id }).session(session);
-    await MemberModel.deleteMany({ workspaceId: workspace._id }).session(session);
+    const user = await UserModel.findById(userId).session(session); // Find the user by ID
+    if (!user) {
+      throw new NotFoundException('User not found'); // Throw an error if the user is not found
+    }
+
+    if (workspace.owner.toString() !== userId) {
+      throw new BadRequestException('You are not the owner of this workspace'); // Throw an error if the user is not the owner
+    }
+
+    await ProjectModel.deleteMany({ workspace: workspace._id }).session(session); // Delete all projects in the workspace
+    await TaskModel.deleteMany({ workspace: workspace._id }).session(session); // Delete all tasks in the workspace
+    await MemberModel.deleteMany({ workspaceId: workspace._id }).session(session); // Delete all members in the workspace
 
     if (user?.currentWorkspace?.equals(workspaceId)) {
-      const memeberWorkspace = await MemberModel.findOne({
-        userId,
-      }).session(session);
-      user.currentWorkspace = memeberWorkspace?.workspaceId || null;
-      await user.save({ session });
+      const memeberWorkspace = await MemberModel.findOne({ userId }).session(session); // Find another workspace for the user
+      user.currentWorkspace = memeberWorkspace?.workspaceId || null; // Update the user's current workspace
+      await user.save({ session }); // Save the updated user
     }
 
-    await workspace.deleteOne({ session });
+    await workspace.deleteOne({ session }); // Delete the workspace
 
-    await session.commitTransaction();
-    session.endSession();
-    return {
-      currentWorkspace: user?.currentWorkspace,
-    };
+    await session.commitTransaction(); // Commit the transaction
+    session.endSession(); // End the session
+    return { currentWorkspace: user?.currentWorkspace }; // Return the user's current workspace
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
+    await session.abortTransaction(); // Abort the transaction in case of an error
+    session.endSession(); // End the session
+    throw error; // Rethrow the error
   } finally {
-    session.endSession();
+    session.endSession(); // Ensure the session is ended
   }
 };
 
