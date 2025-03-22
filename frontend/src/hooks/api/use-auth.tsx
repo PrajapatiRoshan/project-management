@@ -1,9 +1,9 @@
-import { getCurrentUserQueryFn } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
+import { getCurrentUserQueryFn } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
 
 const useAuth = () => {
   const query = useQuery({
-    queryKey: ["authUser"],
+    queryKey: ['authUser'],
     queryFn: getCurrentUserQueryFn,
     staleTime: 0,
     retry: 2,
@@ -12,3 +12,4 @@ const useAuth = () => {
 };
 
 export default useAuth;
+

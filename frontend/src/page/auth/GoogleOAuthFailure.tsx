@@ -20,7 +20,6 @@ const GoogleOAuthFailure = () => {
           <div style={{ textAlign: 'center', marginTop: '50px' }}>
             <h1>Authentication Failed</h1>
             <p>We couldn't sign you in with Google. Please try again.</p>
-
             <Button onClick={() => navigate('/')} style={{ marginTop: '20px' }}>
               Back to Login
             </Button>

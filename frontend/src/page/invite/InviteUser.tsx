@@ -39,10 +39,10 @@ const InviteUser = () => {
           <Card>
             <CardHeader className="text-center">
               <CardTitle className="text-xl">
-                Hey there! You're invited to join a TeamSync Workspace!
+                Hey there! You're invited to join a Prajapati Workspace!
               </CardTitle>
               <CardDescription>
-                Looks like you need to be logged into your TeamSync account to join this
+                Looks like you need to be logged into your Prajapati account to join this
                 Workspace.
               </CardDescription>
             </CardHeader>

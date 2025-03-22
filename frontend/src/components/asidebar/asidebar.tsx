@@ -30,14 +30,15 @@ import { NavMain } from './nav-main';
 import { NavProjects } from './nav-projects';
 import { Separator } from '../ui/separator';
 import useWorkspaceId from '@/hooks/use-workspace-id';
+import { useAuthContext } from '@/context/auth-provider';
+import { AvatarImage } from '@radix-ui/react-avatar';
 
 const Asidebar = () => {
+  const { isLoading, user } = useAuthContext();
   const { open } = useSidebar();
   const workspaceId = useWorkspaceId();
 
   const [isOpen, setIsOpen] = useState(false);
-
-  const isLoading = false;
 
   return (
     <>
@@ -50,7 +51,7 @@ const Asidebar = () => {
                 to={`/workspace/${workspaceId}`}
                 className="hidden md:flex ml-2 items-center gap-2 self-center font-medium"
               >
-                Roshan Prajapati
+                Roshan_Prajapati
               </Link>
             )}
           </div>
@@ -82,13 +83,15 @@ const Asidebar = () => {
                       className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                     >
                       <Avatar className="h-8 w-8 rounded-full">
+                        <AvatarImage src={user?.profilePicture || ''} />
                         <AvatarFallback className="rounded-full border border-gray-500">
-                          CN
+                          {user?.name?.split(' ')?.[0]?.charAt(0)}
+                          {user?.name?.split(' ')?.[1]?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="grid flex-1 text-left text-sm leading-tight">
-                        <span className="truncate font-semibold">Chile Brown</span>
-                        <span className="truncate text-xs">example@gmail.com</span>
+                        <span className="truncate font-semibold">{user?.name}</span>
+                        <span className="truncate text-xs">{user?.email}</span>
                       </div>
                       <EllipsisIcon className="ml-auto size-4" />
                     </SidebarMenuButton>

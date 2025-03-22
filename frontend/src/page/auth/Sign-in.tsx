@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -21,8 +21,17 @@ import {
 import { Input } from '@/components/ui/input';
 import Logo from '@/components/logo';
 import GoogleOauthButton from '@/components/auth/google-oauth-button';
+import { useMutation } from '@tanstack/react-query';
+import { loginMutationFn } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
+import { Loader } from 'lucide-react';
 
 const SignIn = () => {
+  const navigate = useNavigate();
+  const { mutate, isPending } = useMutation({ mutationFn: loginMutationFn });
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl');
+
   const formSchema = z.object({
     email: z.string().trim().email('Invalid email address').min(1, {
       message: 'Workspace name is required',
@@ -41,7 +50,21 @@ const SignIn = () => {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+    if (isPending) return;
+    mutate(values, {
+      onSuccess: (data) => {
+        const user = data.user;
+        const decodeUrl = returnUrl ? decodeURIComponent(returnUrl) : null;
+        navigate(decodeUrl || `/workspace/${user.currentWorkspace}`);
+      },
+      onError: (error) => {
+        toast({
+          title: 'Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+      },
+    });
   };
 
   return (
@@ -118,7 +141,8 @@ const SignIn = () => {
                           )}
                         />
                       </div>
-                      <Button type="submit" className="w-full">
+                      <Button disabled={isPending} type="submit" className="w-full">
+                        {isPending && <Loader className="animate-spin" />}
                         Login
                       </Button>
                     </div>
