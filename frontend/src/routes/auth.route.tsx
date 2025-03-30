@@ -10,7 +10,7 @@ const AuthRoute = () => {
 
   const _isAuthRoute = isAuthRoute(location.pathname);
 
-  if (isLoading && _isAuthRoute) return <DashboardSkeleton />;
+  if (isLoading && !_isAuthRoute) return <DashboardSkeleton />;
 
   if (!user) return <Outlet />;
 

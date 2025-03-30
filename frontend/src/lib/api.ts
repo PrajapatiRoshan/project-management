@@ -1,16 +1,18 @@
 import API from './axios-client';
 import {
   AllWorkspaceResponseType,
+  CreateWorkspaceResponseType,
+  CreateWorkspaceType,
   CurrentUserResponseType,
+  EditWorkspaceType,
   LoginResponseType,
   loginType,
   registerType,
+  WorkspaceByIdResponseType,
 } from '@/types/api.type';
 
 export const loginMutationFn = async (data: loginType): Promise<LoginResponseType> => {
   const response = await API.post(`/auth/login`, data);
-  console.log(response, '......');
-
   return response.data;
 };
 
@@ -27,11 +29,27 @@ export const getCurrentUserQueryFn = async (): Promise<CurrentUserResponseType> 
 //********* WORKSPACE ****************
 //************* */
 
-export const createWorkspaceMutationFn = async () => {};
+export const createWorkspaceMutationFn = async (
+  data: CreateWorkspaceType
+): Promise<CreateWorkspaceResponseType> => {
+  const response = await API.post(`/workspace/create/new`, data);
+  return response.data;
+};
 
-export const editWorkspaceMutationFn = async () => {};
+export const editWorkspaceMutationFn = async ({
+  workspaceId,
+  data,
+}: EditWorkspaceType) => {
+  const response = await API.put(`/workspace/update/${workspaceId}`, data);
+  return response.data;
+};
 
-export const getWorkspaceByIdQueryFn = async () => {};
+export const getWorkspaceByIdQueryFn = async (
+  workspaceId: string
+): Promise<WorkspaceByIdResponseType> => {
+  const response = await API.get(`/workspace/${workspaceId}`);
+  return response.data;
+};
 
 export const getAllWorkspacesUserIsMemberQueryFn =
   async (): Promise<AllWorkspaceResponseType> => {
@@ -43,7 +61,15 @@ export const getWorkspaceAnalyticsQueryFn = async () => {};
 
 export const changeWorkspaceMemberRoleMutationFn = async () => {};
 
-export const deleteWorkspaceMutationFn = async () => {};
+export const deleteWorkspaceMutationFn = async (
+  workspaceId: string
+): Promise<{
+  message: string;
+  currentWorkspace: string;
+}> => {
+  const response = await API.delete(`/workspace/delete/${workspaceId}`);
+  return response.data;
+};
 
 //*******MEMBER ****************
 

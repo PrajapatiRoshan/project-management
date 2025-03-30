@@ -28,9 +28,9 @@ import { Loader } from 'lucide-react';
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const { mutate, isPending } = useMutation({ mutationFn: loginMutationFn });
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl');
+  const { mutate, isPending } = useMutation({ mutationFn: loginMutationFn });
 
   const formSchema = z.object({
     email: z.string().trim().email('Invalid email address').min(1, {
