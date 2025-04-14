@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -29,7 +29,8 @@ import { Loader } from 'lucide-react';
 const SignUp = () => {
   const navigate = useNavigate();
   const { mutate, isPending } = useMutation({ mutationFn: registerMutationFn });
-
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl');
   const formSchema = z.object({
     name: z.string().trim().min(1, {
       message: 'Name is required',
@@ -55,7 +56,8 @@ const SignUp = () => {
     if (isPending) return;
     mutate(values, {
       onSuccess: () => {
-        navigate('/');
+        const decodeUrl = returnUrl ? decodeURIComponent(returnUrl) : null;
+        navigate(decodeUrl || '/');
       },
       onError: (error) => {
         toast({

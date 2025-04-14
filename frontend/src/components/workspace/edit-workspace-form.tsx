@@ -19,9 +19,11 @@ import { editWorkspaceMutationFn } from '@/lib/api';
 import useWorkspaceId from '@/hooks/use-workspace-id';
 import { toast } from '@/hooks/use-toast';
 import { Loader } from 'lucide-react';
+import { Permissions } from '@/constant';
 
 export default function EditWorkspaceForm() {
-  const { workspace } = useAuthContext();
+  const { workspace, hasPermission } = useAuthContext();
+  const canEditWorkspace = hasPermission(Permissions.EDIT_WORKSPACE);
   const queryClient = useQueryClient();
   const workspaceId = useWorkspaceId();
   const { mutate, isPending } = useMutation({
@@ -133,15 +135,16 @@ export default function EditWorkspaceForm() {
                 )}
               />
             </div>
-            {/* {canEditWorkspace && ( */}
-            <Button
-              className="flex place-self-end  h-[40px] text-white font-semibold"
-              disabled={isPending}
-              type="submit"
-            >
-              {isPending && <Loader className="animate-spin" />}
-              Update Workspace
-            </Button>
+            {canEditWorkspace && (
+              <Button
+                className="flex place-self-end  h-[40px] text-white font-semibold"
+                disabled={isPending}
+                type="submit"
+              >
+                {isPending && <Loader className="animate-spin" />}
+                Update Workspace
+              </Button>
+            )}
           </form>
         </Form>
       </div>

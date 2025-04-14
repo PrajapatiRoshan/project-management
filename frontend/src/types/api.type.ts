@@ -1,8 +1,4 @@
-import {
-  PermissionType,
-  TaskPriorityEnumType,
-  TaskStatusEnumType,
-} from "@/constant";
+import { PermissionType, TaskPriorityEnumType, TaskStatusEnumType } from '@/constant';
 
 export type loginType = { email: string; password: string };
 export type LoginResponseType = {
@@ -128,7 +124,7 @@ export type AnalyticsResponseType = {
   message: string;
   analytics: {
     totalTasks: number;
-    overdueTasks: number;
+    overDueTasks: number;
     completedTasks: number;
   };
 };
@@ -175,7 +171,7 @@ export type CreateProjectPayloadType = {
 };
 
 export type ProjectResponseType = {
-  message: "Project created successfully";
+  message: 'Project created successfully';
   project: ProjectType;
 };
 
@@ -266,3 +262,4 @@ export type AllTaskResponseType = {
   tasks: TaskType[];
   pagination: PaginationType;
 };
+
