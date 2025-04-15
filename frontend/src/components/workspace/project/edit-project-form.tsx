@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import {
   Form,
   FormControl,
@@ -9,48 +9,94 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "../../ui/textarea";
-import EmojiPickerComponent from "@/components/emoji-picker";
-import { ProjectType } from "@/types/api.type";
+} from '@/components/ui/form';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '../../ui/textarea';
+import EmojiPickerComponent from '@/components/emoji-picker';
+import { ProjectType } from '@/types/api.type';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import useWorkspaceId from '@/hooks/use-workspace-id';
+import { editProjectMutationFn } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
+import { Loader } from 'lucide-react';
 
 export default function EditProjectForm(props: {
   project?: ProjectType;
   onClose: () => void;
 }) {
-  const { onClose } = props;
+  const { project, onClose } = props;
+  const workspaceId = useWorkspaceId();
+  const queryClient = useQueryClient();
 
-  const [emoji, setEmoji] = useState("📊");
+  const [emoji, setEmoji] = useState('📊');
+  const projectId = project?._id as string;
 
   const formSchema = z.object({
     name: z.string().trim().min(1, {
-      message: "Project title is required",
+      message: 'Project title is required',
     }),
     description: z.string().trim(),
+  });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: editProjectMutationFn,
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      description: "",
+      name: '',
+      description: '',
     },
   });
+
+  useEffect(() => {
+    if (project) {
+      setEmoji(project.emoji);
+      form.setValue('name', project.name);
+      form.setValue('description', project.description);
+    }
+  }, [form, project]);
 
   const handleEmojiSelection = (emoji: string) => {
     setEmoji(emoji);
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
-    onClose();
+    if (isPending) return;
+    const payload = {
+      workspaceId,
+      projectId,
+      data: {
+        emoji,
+        ...values,
+      },
+    };
+    mutate(payload, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['singleProject', projectId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['allProjects', workspaceId],
+        });
+        toast({
+          title: 'Success',
+          description: 'Project updated successfully',
+          variant: 'success',
+        });
+        setTimeout(() => onClose(), 100);
+      },
+      onError: (error) => {
+        toast({
+          title: 'Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+      },
+    });
   };
 
   return (
@@ -112,16 +158,10 @@ export default function EditProjectForm(props: {
                   <FormItem>
                     <FormLabel className="dark:text-[#f1f7feb5] text-sm">
                       Project description
-                      <span className="text-xs font-extralight ml-2">
-                        Optional
-                      </span>
+                      <span className="text-xs font-extralight ml-2">Optional</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        rows={4}
-                        placeholder="Projects description"
-                        {...field}
-                      />
+                      <Textarea rows={4} placeholder="Projects description" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -130,10 +170,12 @@ export default function EditProjectForm(props: {
             </div>
 
             <Button
+              disabled={isPending}
               className="flex place-self-end  h-[40px] text-white font-semibold"
               type="submit"
             >
-              Create
+              {isPending && <Loader className="animate-spin" />}
+              Update
             </Button>
           </form>
         </Form>
@@ -141,3 +183,4 @@ export default function EditProjectForm(props: {
     </div>
   );
 }
+
