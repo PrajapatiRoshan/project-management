@@ -67,7 +67,6 @@ const SignUp = () => {
         });
       },
     });
-    console.log(values);
   };
 
   return (

@@ -1,20 +1,16 @@
-"use client";
+'use client';
 
-import {
-  LucideIcon,
-  Settings,
-  Users,
-  CheckCircle,
-  LayoutDashboard,
-} from "lucide-react";
+import { LucideIcon, Settings, Users, CheckCircle, LayoutDashboard } from 'lucide-react';
 import {
   SidebarGroup,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { Link, useLocation } from "react-router-dom";
-import useWorkspaceId from "@/hooks/use-workspace-id";
+} from '@/components/ui/sidebar';
+import { Link, useLocation } from 'react-router-dom';
+import useWorkspaceId from '@/hooks/use-workspace-id';
+import { useAuthContext } from '@/context/auth-provider';
+import { Permissions } from '@/constant';
 
 type ItemType = {
   title: string;
@@ -23,6 +19,9 @@ type ItemType = {
 };
 
 export function NavMain() {
+  const { hasPermission } = useAuthContext();
+
+  const canManageSettings = hasPermission(Permissions.MANAGE_WORKSPACE_SETTINGS);
   const workspaceId = useWorkspaceId();
   const location = useLocation();
 
@@ -30,26 +29,30 @@ export function NavMain() {
 
   const items: ItemType[] = [
     {
-      title: "Dashboard",
+      title: 'Dashboard',
       url: `/workspace/${workspaceId}`,
       icon: LayoutDashboard,
     },
     {
-      title: "Tasks",
+      title: 'Tasks',
       url: `/workspace/${workspaceId}/tasks`,
       icon: CheckCircle,
     },
     {
-      title: "Members",
+      title: 'Members',
       url: `/workspace/${workspaceId}/members`,
       icon: Users,
     },
 
-    {
-      title: "Settings",
-      url: `/workspace/${workspaceId}/settings`,
-      icon: Settings,
-    },
+    ...(canManageSettings
+      ? [
+          {
+            title: 'Settings',
+            url: `/workspace/${workspaceId}/settings`,
+            icon: Settings,
+          },
+        ]
+      : []),
   ];
   return (
     <SidebarGroup>
@@ -68,3 +71,4 @@ export function NavMain() {
     </SidebarGroup>
   );
 }
+

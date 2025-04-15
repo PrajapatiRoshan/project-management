@@ -1,6 +1,6 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import {
   Form,
   FormControl,
@@ -8,24 +8,33 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "../../ui/textarea";
-import EmojiPickerComponent from "@/components/emoji-picker";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { useState } from "react";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '../../ui/textarea';
+import EmojiPickerComponent from '@/components/emoji-picker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useWorkspaceId from '@/hooks/use-workspace-id';
+import { useMutation } from '@tanstack/react-query';
+import { createProjectMutationFn } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
+import { Loader } from 'lucide-react';
 
-export default function CreateProjectForm() {
-  const [emoji, setEmoji] = useState("📊");
+export default function CreateProjectForm({ onClose }: { onClose: () => void }) {
+  const navigate = useNavigate();
+  const workspaceId = useWorkspaceId();
+
+  const [emoji, setEmoji] = useState('📊');
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: createProjectMutationFn,
+  });
 
   const formSchema = z.object({
     name: z.string().trim().min(1, {
-      message: "Project title is required",
+      message: 'Project title is required',
     }),
     description: z.string().trim(),
   });
@@ -33,8 +42,8 @@ export default function CreateProjectForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      description: "",
+      name: '',
+      description: '',
     },
   });
 
@@ -43,7 +52,28 @@ export default function CreateProjectForm() {
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+    if (isPending) return;
+    const payload = {
+      workspaceId,
+      data: {
+        emoji,
+        ...values,
+      },
+    };
+    mutate(payload, {
+      onSuccess: (data) => {
+        const project = data.project;
+        navigate(`/workspace/${workspaceId}/project/${project._id}`);
+        setTimeout(() => onClose(), 500);
+      },
+      onError: (error) => {
+        toast({
+          title: 'Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+      },
+    });
   };
 
   return (
@@ -109,16 +139,10 @@ export default function CreateProjectForm() {
                   <FormItem>
                     <FormLabel className="dark:text-[#f1f7feb5] text-sm">
                       Project description
-                      <span className="text-xs font-extralight ml-2">
-                        Optional
-                      </span>
+                      <span className="text-xs font-extralight ml-2">Optional</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        rows={4}
-                        placeholder="Projects description"
-                        {...field}
-                      />
+                      <Textarea rows={4} placeholder="Projects description" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -127,9 +151,11 @@ export default function CreateProjectForm() {
             </div>
 
             <Button
+              disabled={isPending}
               className="flex place-self-end  h-[40px] text-white font-semibold"
               type="submit"
             >
+              {isPending && <Loader className="animate-spin" />}
               Create
             </Button>
           </form>
@@ -138,3 +164,4 @@ export default function CreateProjectForm() {
     </div>
   );
 }
+

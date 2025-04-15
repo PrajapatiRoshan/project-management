@@ -1,12 +1,12 @@
-import { ArrowRight, Folder, MoreHorizontal, Plus, Trash2 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ArrowRight, Folder, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -15,12 +15,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
-import useWorkspaceId from "@/hooks/use-workspace-id";
-import useCreateProjectDialog from "@/hooks/use-create-project-dialog";
-import { ConfirmDialog } from "../resuable/confirm-dialog";
-import useConfirmDialog from "@/hooks/use-confirm-dialog";
-import { Button } from "../ui/button";
+} from '@/components/ui/sidebar';
+import useWorkspaceId from '@/hooks/use-workspace-id';
+import useCreateProjectDialog from '@/hooks/use-create-project-dialog';
+import { ConfirmDialog } from '../resuable/confirm-dialog';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
+import { Button } from '../ui/button';
+import PermissionsGuard from '../resuable/permission-guard';
+import { Permissions } from '@/constant';
 
 export function NavProjects() {
   const navigate = useNavigate();
@@ -36,21 +38,21 @@ export function NavProjects() {
 
   const projects = [
     {
-      id: "pro-383dh",
-      name: "Design Engineering",
-      emoji: "📊",
+      id: 'pro-383dh',
+      name: 'Design Engineering',
+      emoji: '📊',
       url: `/workspace/${workspaceId}/project/:pro-383dh`,
     },
     {
-      id: "p383dh",
-      name: "Sales & Marketing",
-      emoji: "📈",
+      id: 'p383dh',
+      name: 'Sales & Marketing',
+      emoji: '📈',
       url: `/workspace/${workspaceId}/project/:p383dh`,
     },
     {
-      id: "pro-wwhe",
-      name: "Travel",
-      emoji: "✈️",
+      id: 'pro-wwhe',
+      name: 'Travel',
+      emoji: '✈️',
       url: `/workspace/${workspaceId}/project/:pro-wwhe`,
     },
   ];
@@ -63,30 +65,35 @@ export function NavProjects() {
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupLabel className="w-full justify-between pr-0">
           <span>Projects</span>
-          <button
-            onClick={onOpen}
-            type="button"
-            className="flex size-5 items-center justify-center rounded-full border"
-          >
-            <Plus className="size-3.5" />
-          </button>
+          <PermissionsGuard requiredPermission={Permissions.CREATE_PROJECT}>
+            <button
+              onClick={onOpen}
+              type="button"
+              className="flex size-5 items-center justify-center rounded-full border"
+            >
+              <Plus className="size-3.5" />
+            </button>
+          </PermissionsGuard>
         </SidebarGroupLabel>
         <SidebarMenu className="h-[320px] scrollbar overflow-y-auto pb-2">
           {projects?.length === 0 ? (
             <div className="pl-3">
               <p className="text-xs text-muted-foreground">
-                There is no projects in this Workspace yet. Projects you create
-                will show up here.
+                There is no projects in this Workspace yet. Projects you create will show
+                up here.
               </p>
-              <Button
-                variant="link"
-                type="button"
-                className="h-0 p-0 text-[13px] underline font-semibold mt-4"
-                onClick={onOpen}
-              >
-                Create a project
-                <ArrowRight />
-              </Button>
+              <PermissionsGuard requiredPermission={Permissions.CREATE_PROJECT}>
+                {' '}
+                <Button
+                  variant="link"
+                  type="button"
+                  className="h-0 p-0 text-[13px] underline font-semibold mt-4"
+                  onClick={onOpen}
+                >
+                  Create a project
+                  <ArrowRight />
+                </Button>
+              </PermissionsGuard>
             </div>
           ) : (
             projects.map((item) => {
@@ -109,12 +116,10 @@ export function NavProjects() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       className="w-48 rounded-lg"
-                      side={isMobile ? "bottom" : "right"}
-                      align={isMobile ? "end" : "start"}
+                      side={isMobile ? 'bottom' : 'right'}
+                      align={isMobile ? 'end' : 'start'}
                     >
-                      <DropdownMenuItem
-                        onClick={() => navigate(`${projectUrl}`)}
-                      >
+                      <DropdownMenuItem onClick={() => navigate(`${projectUrl}`)}>
                         <Folder className="text-muted-foreground" />
                         <span>View Project</span>
                       </DropdownMenuItem>
@@ -151,7 +156,7 @@ export function NavProjects() {
         onConfirm={handleConfirm}
         title="Delete Project"
         description={`Are you sure you want to delete ${
-          context?.name || "this item"
+          context?.name || 'this item'
         }? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
@@ -159,3 +164,4 @@ export function NavProjects() {
     </>
   );
 }
+

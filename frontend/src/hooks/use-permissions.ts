@@ -10,14 +10,17 @@ const usePermissions = (
 
   useEffect(() => {
     if (user && workspace) {
-      const member = workspace.members.find((member) => member.userId === user._id);
+      const member = workspace.members.find(
+        (member) => member.userId?.toString() === user._id?.toString()
+      );
       if (member) {
-        setPermissions(member.role.permissions || []);
+        setPermissions(member.role.permission || []);
       }
     }
-  }, [user, workspace]);
+  }, [JSON.stringify(user), JSON.stringify(workspace)]);
 
   return useMemo(() => permissions, [permissions]);
 };
 
 export default usePermissions;
+

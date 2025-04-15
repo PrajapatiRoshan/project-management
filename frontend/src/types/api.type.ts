@@ -79,7 +79,7 @@ export type WorkspaceWithMembersType = WorkspaceType & {
     role: {
       _id: string;
       name: string;
-      permissions: PermissionType[];
+      permission: PermissionType[];
     };
     joinedAt: string;
     createdAt: string;
