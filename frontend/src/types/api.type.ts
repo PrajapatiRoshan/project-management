@@ -124,8 +124,9 @@ export type AnalyticsResponseType = {
   message: string;
   analytics: {
     totalTasks: number;
-    overDueTasks: number;
+    overdueTask: number;
     completedTasks: number;
+    pendingTasks?: number;
   };
 };
 
@@ -240,7 +241,7 @@ export type TaskType = {
   } | null;
   createdBy?: string;
   dueDate: string;
-  taskCode: string;
+  taskcode: string;
   createdAt?: string;
   updatedAt?: string;
 };

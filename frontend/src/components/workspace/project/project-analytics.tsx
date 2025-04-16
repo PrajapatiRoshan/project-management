@@ -37,7 +37,7 @@ const ProjectAnalytics = () => {
   const analytics = data?.analytics;
 
   return (
-    <div className="grid gap-4 md:gap-5 lg:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-4 md:gap-5 lg:grid-cols-2 xl:grid-cols-4">
       <AnalyticsCard
         isLoading={isPending}
         title={'Total Task'}
@@ -45,8 +45,13 @@ const ProjectAnalytics = () => {
       />
       <AnalyticsCard
         isLoading={isPending}
+        title={'Pending Task'}
+        value={analytics?.pendingTasks || 0}
+      />
+      <AnalyticsCard
+        isLoading={isPending}
         title={'Overdue Task'}
-        value={analytics?.overDueTasks || 0}
+        value={analytics?.overdueTask || 0}
       />
       <AnalyticsCard
         isLoading={isPending}
