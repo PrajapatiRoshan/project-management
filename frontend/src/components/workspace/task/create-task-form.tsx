@@ -1,8 +1,8 @@
-import { z } from "zod";
-import { format } from "date-fns";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { CalendarIcon, Loader } from "lucide-react";
+import { z } from 'zod';
+import { format } from 'date-fns';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { CalendarIcon, Loader } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -10,27 +10,29 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "../../ui/textarea";
-import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
-import { transformOptions } from "@/lib/helper";
-import useWorkspaceId from "@/hooks/use-workspace-id";
-import { TaskPriorityEnum, TaskStatusEnum } from "@/constant";
+} from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '../../ui/textarea';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
+import { getAvatarColor, getAvatarFallbackText, transformOptions } from '@/lib/helper';
+import useWorkspaceId from '@/hooks/use-workspace-id';
+import { TaskPriorityEnum, TaskStatusEnum } from '@/constant';
+import useGetProjectsInWorkspaceQuery from '@/hooks/api/use-get-projects';
+import useGetWorkspaceMembers from '@/hooks/api/use-get-workspace-members';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createTaskMutationFn } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 export default function CreateTaskForm(props: {
   projectId?: string;
@@ -40,47 +42,80 @@ export default function CreateTaskForm(props: {
 
   const workspaceId = useWorkspaceId();
 
-  const isLoading = false;
+  const queryClient = useQueryClient();
 
-  //const projectOptions = []
+  const { mutate, isPending } = useMutation({
+    mutationFn: createTaskMutationFn,
+  });
+
+  const { data, isLoading } = useGetProjectsInWorkspaceQuery({
+    workspaceId,
+    skip: !!projectId,
+  });
+
+  const { data: memberData, isLoading: isMemberLoading } =
+    useGetWorkspaceMembers(workspaceId);
+
+  const projects = data?.projects || [];
+  const members = memberData?.members || [];
+
+  const projectOptions = projects?.map((project) => ({
+    label: (
+      <div className="flex items-center gap-1">
+        <span>{project.emoji}</span>
+        <span>{project.name}</span>
+      </div>
+    ),
+    value: project._id,
+  }));
 
   // Workspace Memebers
-  //const membersOptions = []
+  const membersOptions = members?.map((member) => {
+    const name = member.userId?.name || 'Unknow';
+    const initials = getAvatarFallbackText(name);
+    const avatarColor = getAvatarColor(name);
+    return {
+      label: (
+        <div className="flex items-center space-x-2">
+          <Avatar className="h-7 w-7">
+            <AvatarImage src={member.userId?.profilePicture || ''} alt={name} />
+            <AvatarFallback className={avatarColor}>{initials}</AvatarFallback>
+          </Avatar>
+          <span>{name}</span>
+        </div>
+      ),
+      value: member.userId._id,
+    };
+  });
 
   const formSchema = z.object({
     title: z.string().trim().min(1, {
-      message: "Title is required",
+      message: 'Title is required',
     }),
     description: z.string().trim(),
     projectId: z.string().trim().min(1, {
-      message: "Project is required",
+      message: 'Project is required',
     }),
-    status: z.enum(
-      Object.values(TaskStatusEnum) as [keyof typeof TaskStatusEnum],
-      {
-        required_error: "Status is required",
-      }
-    ),
-    priority: z.enum(
-      Object.values(TaskPriorityEnum) as [keyof typeof TaskPriorityEnum],
-      {
-        required_error: "Priority is required",
-      }
-    ),
+    status: z.enum(Object.values(TaskStatusEnum) as [keyof typeof TaskStatusEnum], {
+      required_error: 'Status is required',
+    }),
+    priority: z.enum(Object.values(TaskPriorityEnum) as [keyof typeof TaskPriorityEnum], {
+      required_error: 'Priority is required',
+    }),
     assignedTo: z.string().trim().min(1, {
-      message: "AssignedTo is required",
+      message: 'AssignedTo is required',
     }),
     dueDate: z.date({
-      required_error: "A date of birth is required.",
+      required_error: 'A date of birth is required.',
     }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      projectId: projectId ? projectId : "",
+      title: '',
+      description: '',
+      projectId: projectId ? projectId : '',
     },
   });
 
@@ -91,8 +126,35 @@ export default function CreateTaskForm(props: {
   const priorityOptions = transformOptions(taskPriorityList);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values, { workspaceId: workspaceId });
-    onClose();
+    if (isLoading) return;
+    const payload = {
+      workspaceId,
+      projectId: values.projectId,
+      data: {
+        ...values,
+        dueDate: values.dueDate.toISOString(),
+      },
+    };
+    mutate(payload, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['project-analytics', projectId],
+        });
+        toast({
+          title: 'Success',
+          description: 'Task created successfully',
+          variant: 'success',
+        });
+        onClose();
+      },
+      onError: (error) => {
+        toast({
+          title: 'Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+      },
+    });
   };
 
   return (
@@ -142,9 +204,7 @@ export default function CreateTaskForm(props: {
                   <FormItem>
                     <FormLabel className="dark:text-[#f1f7feb5] text-sm">
                       Task description
-                      <span className="text-xs font-extralight ml-2">
-                        Optional
-                      </span>
+                      <span className="text-xs font-extralight ml-2">Optional</span>
                     </FormLabel>
                     <FormControl>
                       <Textarea rows={1} placeholder="Description" {...field} />
@@ -165,10 +225,7 @@ export default function CreateTaskForm(props: {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Project</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a project" />
@@ -180,15 +237,17 @@ export default function CreateTaskForm(props: {
                               <Loader className="w-4 h-4 place-self-center flex animate-spin" />
                             </div>
                           )}
-                          <SelectItem value="m@example.com">
-                            m@example.com
-                          </SelectItem>
-                          <SelectItem value="m@google.com">
-                            m@google.com
-                          </SelectItem>
-                          <SelectItem value="m@support.com">
-                            m@support.com
-                          </SelectItem>
+                          <div className="w-full max-h-[200px] overflow-y-auto scrollbar">
+                            {projectOptions?.map((option) => (
+                              <SelectItem
+                                className="!capitalize cursor-pointer"
+                                value={option.value}
+                                key={option.value}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </div>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -199,7 +258,6 @@ export default function CreateTaskForm(props: {
             )}
 
             {/* {Members AssigneeTo} */}
-
             <div>
               <FormField
                 control={form.control}
@@ -207,25 +265,24 @@ export default function CreateTaskForm(props: {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assigned To</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a assignee" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="m@example.com">
-                          m@example.com
-                        </SelectItem>
-                        <SelectItem value="m@google.com">
-                          m@google.com
-                        </SelectItem>
-                        <SelectItem value="m@support.com">
-                          m@support.com
-                        </SelectItem>
+                        <div className="w-full max-h-[200px] overflow-y-auto scrollbar">
+                          {membersOptions?.map((option) => (
+                            <SelectItem
+                              className="cursor-pointer"
+                              value={option.value}
+                              key={option.value}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </div>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -246,14 +303,14 @@ export default function CreateTaskForm(props: {
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
-                            variant={"outline"}
+                            variant={'outline'}
                             className={cn(
-                              "w-full flex-1 pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
+                              'w-full flex-1 pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP")
+                              format(field.value, 'PPP')
                             ) : (
                               <span>Pick a date</span>
                             )}
@@ -268,9 +325,8 @@ export default function CreateTaskForm(props: {
                           onSelect={field.onChange}
                           disabled={
                             (date) =>
-                              date <
-                                new Date(new Date().setHours(0, 0, 0, 0)) || // Disable past dates
-                              date > new Date("2100-12-31") //Prevent selection beyond a far future date
+                              date < new Date(new Date().setHours(0, 0, 0, 0)) || // Disable past dates
+                              date > new Date('2100-12-31') //Prevent selection beyond a far future date
                           }
                           initialFocus
                           defaultMonth={new Date()}
@@ -285,7 +341,6 @@ export default function CreateTaskForm(props: {
             </div>
 
             {/* {Status} */}
-
             <div>
               <FormField
                 control={form.control}
@@ -293,10 +348,7 @@ export default function CreateTaskForm(props: {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue
@@ -331,10 +383,7 @@ export default function CreateTaskForm(props: {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a priority" />
@@ -361,8 +410,9 @@ export default function CreateTaskForm(props: {
             <Button
               className="flex place-self-end  h-[40px] text-white font-semibold"
               type="submit"
+              disabled={isPending}
             >
-              <Loader className="animate-spin" />
+              {isPending && <Loader className="animate-spin" />}
               Create
             </Button>
           </form>
@@ -371,3 +421,4 @@ export default function CreateTaskForm(props: {
     </div>
   );
 }
+
