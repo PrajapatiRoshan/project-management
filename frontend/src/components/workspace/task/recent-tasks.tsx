@@ -1,94 +1,98 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import {
-  TaskPriorityEnum,
-  TaskPriorityEnumType,
-  TaskStatusEnum,
-  TaskStatusEnumType,
-} from "@/constant";
-import {
-  getAvatarColor,
-  getAvatarFallbackText,
-  transformStatusEnum,
-} from "@/lib/helper";
-
-type TasksType = {
-  id: string;
-  title: string;
-  dueDate: string;
-  status: TaskStatusEnumType;
-  priority: TaskPriorityEnumType;
-  assigneeTo: string;
-};
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { TaskPriorityEnum, TaskStatusEnum } from '@/constant';
+import useWorkspaceId from '@/hooks/use-workspace-id';
+import { getAllTasksQueryFn } from '@/lib/api';
+import { getAvatarColor, getAvatarFallbackText, transformStatusEnum } from '@/lib/helper';
+import { TaskType } from '@/types/api.type';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { Loader } from 'lucide-react';
 
 const RecentTasks = () => {
+  const workspaceId = useWorkspaceId();
+  const { data, isLoading } = useQuery({
+    queryKey: ['all-tasks', workspaceId],
+    queryFn: () => getAllTasksQueryFn({ workspaceId }),
+    staleTime: 0,
+    enabled: !!workspaceId,
+  });
+
   // Tasks data
-  const tasks: TasksType[] = [
-    {
-      id: "Task-001",
-      title: "Update marketing campaign assets",
-      dueDate: "January 5, 2025",
-      status: "IN_PROGRESS",
-      priority: "HIGH",
-      assigneeTo: "JD",
-    },
-    {
-      id: "Task-002",
-      title: "Prepare quarterly financial reports",
-      dueDate: "February 15, 2025",
-      status: "DONE",
-      priority: "MEDIUM",
-      assigneeTo: "AL",
-    },
-    {
-      id: "Task-003",
-      title: "Fix UI bugs in the dashboard",
-      dueDate: "March 10, 2025",
-      status: "TODO",
-      priority: "HIGH",
-      assigneeTo: "RK",
-    },
-    {
-      id: "Task-004",
-      title: "Draft proposal for new project",
-      dueDate: "April 22, 2025",
-      status: "IN_REVIEW",
-      priority: "LOW",
-      assigneeTo: "ML",
-    },
-    {
-      id: "Task-005",
-      title: "Conduct team performance reviews",
-      dueDate: "May 1, 2025",
-      status: "TODO",
-      priority: "HIGH",
-      assigneeTo: "SG",
-    },
-  ];
+  const tasks: TaskType[] = data?.tasks || [];
+
+  // const tasks: TasksType[] = [
+  //   {
+  //     id: 'Task-001',
+  //     title: 'Update marketing campaign assets',
+  //     dueDate: 'January 5, 2025',
+  //     status: 'IN_PROGRESS',
+  //     priority: 'HIGH',
+  //     assigneeTo: 'JD',
+  //   },
+  //   {
+  //     id: 'Task-002',
+  //     title: 'Prepare quarterly financial reports',
+  //     dueDate: 'February 15, 2025',
+  //     status: 'DONE',
+  //     priority: 'MEDIUM',
+  //     assigneeTo: 'AL',
+  //   },
+  //   {
+  //     id: 'Task-003',
+  //     title: 'Fix UI bugs in the dashboard',
+  //     dueDate: 'March 10, 2025',
+  //     status: 'TODO',
+  //     priority: 'HIGH',
+  //     assigneeTo: 'RK',
+  //   },
+  //   {
+  //     id: 'Task-004',
+  //     title: 'Draft proposal for new project',
+  //     dueDate: 'April 22, 2025',
+  //     status: 'IN_REVIEW',
+  //     priority: 'LOW',
+  //     assigneeTo: 'ML',
+  //   },
+  //   {
+  //     id: 'Task-005',
+  //     title: 'Conduct team performance reviews',
+  //     dueDate: 'May 1, 2025',
+  //     status: 'TODO',
+  //     priority: 'HIGH',
+  //     assigneeTo: 'SG',
+  //   },
+  // ];
 
   // Scalable component
   return (
     <div className="flex flex-col space-y-6">
+      {isLoading && <Loader className="w-8 h-8 animate-spin place-self-center flex" />}
+      {tasks?.length === 0 && (
+        <div className="font-semibold text-sm text-muted-foreground text-center py-5">
+          No Tasks created yet
+        </div>
+      )}
       <ul role="list" className="divide-y divide-gray-200">
-        {tasks.map((task) => {
-          const name = task?.assigneeTo || "";
+        {tasks?.map((task) => {
+          const name = task?.assignedTo?.name || '';
           const initials = getAvatarFallbackText(name);
           const avatarColor = getAvatarColor(name);
           return (
             <li
-              key={task.id}
+              key={task._id}
               className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
               {/* Task Info */}
               <div className="flex flex-col space-y-1 flex-grow">
-                <span className="text-sm text-gray-600 font-medium">
-                  {task.id}
+                <span className="text-sm capitalize text-gray-600 font-medium">
+                  {task.taskcode}
                 </span>
                 <p className="text-md font-semibold text-gray-800 truncate">
                   {task.title}
                 </p>
                 <span className="text-sm text-gray-500">
-                  Due: {task.dueDate}
+                  Due: {task.dueDate ? format(task.dueDate, 'PPP') : null}
                 </span>
               </div>
 
@@ -115,10 +119,11 @@ const RecentTasks = () => {
               {/* Assignee */}
               <div className="flex items-center space-x-2 ml-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={""} alt={task.assigneeTo} />
-                  <AvatarFallback className={avatarColor}>
-                    {initials}
-                  </AvatarFallback>
+                  <AvatarImage
+                    src={task?.assignedTo?.profilePicture || ''}
+                    alt={task.assignedTo?.name || ''}
+                  />
+                  <AvatarFallback className={avatarColor}>{initials}</AvatarFallback>
                 </Avatar>
               </div>
             </li>
@@ -199,3 +204,4 @@ export default RecentTasks;
 // };
 
 // export default RecentTasks;
+

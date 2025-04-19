@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { Row } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
+import { useState } from 'react';
+import { Row } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ConfirmDialog } from "@/components/resuable/confirm-dialog";
-import { TaskType } from "@/types/api.type";
+} from '@/components/ui/dropdown-menu';
+import { ConfirmDialog } from '@/components/resuable/confirm-dialog';
+import { TaskType } from '@/types/api.type';
 
 interface DataTableRowActionsProps {
   row: Row<TaskType>;
@@ -22,7 +22,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const [openDeleteDialog, setOpenDialog] = useState(false);
 
   const taskId = row.original._id as string;
-  const taskCode = row.original.taskCode;
+  const taskCode = row.original.taskcode;
 
   const handleConfirm = () => {};
 
@@ -30,18 +30,13 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
-          >
+          <Button variant="ghost" className="flex h-8 w-8 p-0 data-[state=open]:bg-muted">
             <MoreHorizontal />
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[160px]">
-          <DropdownMenuItem className="cursor-pointer">
-            Edit Task
-          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer">Edit Task</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className={`!text-destructive cursor-pointer ${taskId}`}
@@ -66,3 +61,4 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
     </>
   );
 }
+
