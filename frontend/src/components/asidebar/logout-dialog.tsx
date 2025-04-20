@@ -13,6 +13,7 @@ import { logoutMutationFn } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Loader } from 'lucide-react';
+import { useStore } from '@/store/store';
 
 const LogoutDialog = (props: {
   isOpen: boolean;
@@ -20,6 +21,7 @@ const LogoutDialog = (props: {
 }) => {
   const navigate = useNavigate();
   const { isOpen, setIsOpen } = props;
+  const { clearAccessToekn } = useStore();
 
   const queryClient = useQueryClient();
 
@@ -29,6 +31,7 @@ const LogoutDialog = (props: {
       queryClient.resetQueries({
         queryKey: ['authUser'],
       });
+      clearAccessToekn();
       navigate('/');
       setIsOpen(false);
     },

@@ -38,6 +38,7 @@ import memberRoutes from './routes/member.routes';
 import projectRoutes from './routes/project.routes';
 // Import task-related routes
 import taskRoutes from './routes/task.route';
+import { passportAuthenticationJWT } from './config/passport.config';
 
 // Initialize the Express application
 const app = express();
@@ -49,21 +50,21 @@ app.use(express.json());
 // Middleware to parse URL-encoded data
 app.use(express.urlencoded({ extended: true }));
 // Middleware to configure session management
-app.use(
-  session({
-    name: 'session', // Name of the session cookie
-    keys: [config.SESSION_SECRET], // Secret key for encrypting the session
-    maxAge: 24 * 60 * 60 * 1000, // Session expiration time (24 hours)
-    secure: config.NODE_ENV === 'production', // Use secure cookies in production
-    httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
-    sameSite: 'lax', // Restrict cross-site cookie usage
-  })
-);
+// app.use( <--
+//   session({
+//     name: 'session', // Name of the session cookie
+//     keys: [config.SESSION_SECRET], // Secret key for encrypting the session
+//     maxAge: 24 * 60 * 60 * 1000, // Session expiration time (24 hours)
+//     secure: config.NODE_ENV === 'production', // Use secure cookies in production
+//     httpOnly: true, // Prevent client-side JavaScript from accessing the cookie
+//     sameSite: 'lax', // Restrict cross-site cookie usage
+//   })
+// );
 
 // Initialize Passport.js for authentication
 app.use(passport.initialize());
 // Enable persistent login sessions with Passport.js
-app.use(passport.session());
+// app.use(passport.session()); <--
 
 // Enable CORS with specific configuration
 app.use(
@@ -87,18 +88,33 @@ app.get(
   })
 );
 
+//passport session
+// Mount authentication routes at /auth
+// app.use(`${BASE_PATH}/auth`, authRoutes);
+// // Mount user-related routes at /user, protected by authentication middleware
+// app.use(`${BASE_PATH}/user`, isAuthenticated, userRoutes);
+// // Mount workspace-related routes at /workspace, protected by authentication middleware
+// app.use(`${BASE_PATH}/workspace`, isAuthenticated, workspaceRoutes);
+// // Mount member-related routes at /member, protected by authentication middleware
+// app.use(`${BASE_PATH}/member`, isAuthenticated, memberRoutes);
+// // Mount project-related routes at /project, protected by authentication middleware
+// app.use(`${BASE_PATH}/project`, isAuthenticated, projectRoutes);
+// // Mount task-related routes at /task, protected by authentication middleware
+// app.use(`${BASE_PATH}/task`, isAuthenticated, taskRoutes);
+
+//JWT session
 // Mount authentication routes at /auth
 app.use(`${BASE_PATH}/auth`, authRoutes);
 // Mount user-related routes at /user, protected by authentication middleware
-app.use(`${BASE_PATH}/user`, isAuthenticated, userRoutes);
+app.use(`${BASE_PATH}/user`, passportAuthenticationJWT, userRoutes);
 // Mount workspace-related routes at /workspace, protected by authentication middleware
-app.use(`${BASE_PATH}/workspace`, isAuthenticated, workspaceRoutes);
+app.use(`${BASE_PATH}/workspace`, passportAuthenticationJWT, workspaceRoutes);
 // Mount member-related routes at /member, protected by authentication middleware
-app.use(`${BASE_PATH}/member`, isAuthenticated, memberRoutes);
+app.use(`${BASE_PATH}/member`, passportAuthenticationJWT, memberRoutes);
 // Mount project-related routes at /project, protected by authentication middleware
-app.use(`${BASE_PATH}/project`, isAuthenticated, projectRoutes);
+app.use(`${BASE_PATH}/project`, passportAuthenticationJWT, projectRoutes);
 // Mount task-related routes at /task, protected by authentication middleware
-app.use(`${BASE_PATH}/task`, isAuthenticated, taskRoutes);
+app.use(`${BASE_PATH}/task`, passportAuthenticationJWT, taskRoutes);
 
 // Use the custom error handler middleware for handling errors
 app.use(errorHandler);

@@ -6,24 +6,36 @@ import { registerSchema } from '../validation/auth.validation'; // Schema for re
 import { HTTPSTATUS } from '../config/http.config'; // HTTP status codes
 import { registerUserService } from '../services/auth.service'; // Service to handle user registration
 import passport from 'passport'; // Passport.js for authentication
+import { signJwtToken } from '../utils/jwt';
 
 // Google login callback controller
 export const googleLoginCallback = asyncHandler(async (req: Request, res: Response) => {
-  // Retrieve the current workspace from the authenticated user
+  const jwt = req.jwt;
   const currentWorkspace = req.user?.currentWorkspace;
 
-  // If the workspace is not available, redirect to the callback URL with a failure status
-  if (!currentWorkspace) {
+  if (!jwt) {
     return res.redirect(`${config.FRONTEND_GOOGLE_CALLBACK_URL}?status=failure`);
   }
 
-  // Construct the redirect URI by encoding it for use in the URL
-  const redirectUri = encodeURIComponent(config.FRONTEND_GOOGLE_CALLBACK_URL);
-
-  // Redirect the user to the workspace URL with the redirect_uri appended as a query parameter
   return res.redirect(
-    `${config.FRONTEND_ORIGIN}/workspaces/${currentWorkspace}?redirect_uri=${redirectUri}`
+    `${config.FRONTEND_GOOGLE_CALLBACK_URL}?status=success&access_token=${jwt}&current_workspace=${currentWorkspace}`
   );
+
+  // // Retrieve the current workspace from the authenticated user
+  // const currentWorkspace = req.user?.currentWorkspace;
+
+  // // If the workspace is not available, redirect to the callback URL with a failure status
+  // if (!currentWorkspace) {
+  //   return res.redirect(`${config.FRONTEND_GOOGLE_CALLBACK_URL}?status=failure`);
+  // }
+
+  // // Construct the redirect URI by encoding it for use in the URL
+  // const redirectUri = encodeURIComponent(config.FRONTEND_GOOGLE_CALLBACK_URL);
+
+  // // Redirect the user to the workspace URL with the redirect_uri appended as a query parameter
+  // return res.redirect(
+  //   `${config.FRONTEND_ORIGIN}/workspaces/${currentWorkspace}?redirect_uri=${redirectUri}`
+  // );
 });
 
 // User registration controller
@@ -66,16 +78,24 @@ export const loginController = asyncHandler(
         }
 
         // Log the user into the session
-        req.logIn(user, (err) => {
-          if (err) {
-            return next(err); // Handle login errors
-          }
+        // req.logIn(user, (err) => {
+        //   if (err) {
+        //     return next(err); // Handle login errors
+        //   }
 
-          // Send a success response with the logged-in user information
-          return res.status(HTTPSTATUS.OK).json({
-            message: 'Logged in successfully',
-            user,
-          });
+        //   // Send a success response with the logged-in user information
+        //   return res.status(HTTPSTATUS.OK).json({
+        //     message: 'Logged in successfully',
+        //     user,
+        //   });
+        // });
+
+        const access_token = signJwtToken({ userId: user._id });
+
+        return res.status(HTTPSTATUS.OK).json({
+          message: 'Logged in successfully',
+          access_token,
+          user,
         });
       }
     )(req, res, next); // Immediately call the authentication function with request, response, and next

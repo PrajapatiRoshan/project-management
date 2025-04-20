@@ -10,6 +10,9 @@ declare global {
       // This is useful because Mongoose ObjectIds are not strictly typed as strings.
       _id?: any;
     }
+    interface Request {
+      jwt?: string;
+    }
   }
 }
 

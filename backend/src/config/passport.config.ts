@@ -6,7 +6,13 @@ import { config } from './app.config'; // Configuration file for environment var
 import { Request } from 'express'; // Express Request object type
 import { NotFoundException } from '../utils/appError'; // Custom exception handling
 import { ProviderEnum } from '../enums/account-provider.enum'; // Enum for different account providers
-import { loginOrCreateAccountService, verifyUserService } from '../services/auth.service'; // Authentication services
+import {
+  findUserById,
+  loginOrCreateAccountService,
+  verifyUserService,
+} from '../services/auth.service'; // Authentication services
+import { signJwtToken } from '../utils/jwt';
+import { StrategyOptions, ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
 
 // Setting up Google OAuth strategy
 passport.use(
@@ -39,6 +45,10 @@ passport.use(
           email: email, // User's email address
         });
 
+        const jwt = signJwtToken({ userId: user._id });
+
+        req.jwt = jwt;
+
         // Indicate successful authentication by passing the user object
         done(null, user);
       } catch (error) {
@@ -55,7 +65,7 @@ passport.use(
     {
       usernameField: 'email', // Specifies that the username field in the request will be 'email'
       passwordField: 'password', // Specifies that the password field in the request will be 'password'
-      session: true, // Enables persistent login sessions
+      session: false, // Enables persistent login sessions
     },
     async (email, password, done) => {
       try {
@@ -71,9 +81,42 @@ passport.use(
   )
 );
 
+interface JwtPayload {
+  userId: string;
+}
+
+const options: StrategyOptions = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: config.JWT_SECRET,
+  audience: ['user'],
+  algorithms: ['HS256'],
+};
+
+passport.use(
+  new JwtStrategy(options, async (payload: JwtPayload, done) => {
+    try {
+      const user = await findUserById(payload.userId);
+      if (!user) {
+        return done(null, false);
+      }
+      return done(null, user);
+    } catch (error) {
+      return done(null, false);
+    }
+  })
+);
+
 // Serialize the user object into the session
 passport.serializeUser((user: any, done) => done(null, user));
 
 // Deserialize the user object from the session
 passport.deserializeUser((user: any, done) => done(null, user));
+
+export const passportAuthenticationJWT = passport.authenticate('jwt', { session: false });
+// export const passportAuthenticationGoogle = passport.authenticate('google', {
+//   scope: ['profile', 'email'],
+//   session: false,
+// });
+
+// export const passportAuthenticationLocal = passport.authenticate('local', { session: false });
 

@@ -13,6 +13,11 @@ const appConfig = () => ({
   MONGO_URI: getEnv('MONGO_URI', ''),
 
   // Get the SESSION_SECRET environment variable
+  JWT_SECRET: getEnv('JWT_SECRET'),
+  // Get the JWT_EXPIRES_IN environment variable
+  JWT_EXPIRES_IN: getEnv('JWT_EXPIRES_IN', '1d'),
+
+  // Get the SESSION_SECRET environment variable
   SESSION_SECRET: getEnv('SESSION_SECRET'),
   // Get the SESSION_EXPIRES_IN environment variable
   SESSION_EXPIRES_IN: getEnv('SESSION_EXPIRES_IN'),
