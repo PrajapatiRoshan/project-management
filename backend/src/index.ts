@@ -78,6 +78,7 @@ app.use(
 app.get(
   '/',
   asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    res.send('working...');
     // Throw a custom bad request error
     throw new BadRequestException(
       'This is a bad request',
