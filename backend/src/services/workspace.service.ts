@@ -168,7 +168,7 @@ export const deleteWorkspaceByIdService = async (
       throw new NotFoundException('User not found'); // Throw an error if the user is not found
     }
 
-    if (workspace.owner.toString() !== userId) {
+    if (workspace.owner.toString() !== userId.toString()) {
       throw new BadRequestException('You are not the owner of this workspace'); // Throw an error if the user is not the owner
     }
 

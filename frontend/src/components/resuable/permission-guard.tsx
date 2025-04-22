@@ -24,7 +24,7 @@ const PermissionsGuard: React.FC<PermissionsGuardProps> = ({
       w-full
       text-muted-foreground"
         >
-          You dont have the permission to view this{' '}
+          You dont have the permission to view this
         </div>
       )
     );
