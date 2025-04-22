@@ -13,6 +13,7 @@ import {
   CreateWorkspaceResponseType,
   CreateWorkspaceType,
   CurrentUserResponseType,
+  EditByIdPayloadType,
   EditProjectPayloadType,
   EditWorkspaceType,
   LoginResponseType,
@@ -20,6 +21,8 @@ import {
   ProjectByIdPayloadType,
   ProjectResponseType,
   registerType,
+  TaskResponseType,
+  UpdateByIdPayloadType,
   WorkspaceByIdResponseType,
 } from '@/types/api.type';
 
@@ -192,6 +195,32 @@ export const createTaskMutationFn = async ({
   return response.data;
 };
 
+export const getTaskByIdQueryFn = async ({
+  workspaceId,
+  projectId,
+  taskId,
+}: EditByIdPayloadType): Promise<TaskResponseType> => {
+  const response = await API.get(
+    `/task/${taskId}/project/${projectId}/workspace/${workspaceId}`
+  );
+  return response.data;
+};
+
+export const editTaskMutationFn = async ({
+  workspaceId,
+  projectId,
+  taskId,
+  data,
+}: UpdateByIdPayloadType): Promise<TaskResponseType> => {
+  console.log('api runignignigjijgijgn');
+
+  const response = await API.put(
+    `/task/${taskId}/projects/${projectId}/workspace/${workspaceId}/update`,
+    data
+  );
+  return response.data;
+};
+
 export const getAllTasksQueryFn = async ({
   workspaceId,
   keyword,
@@ -223,5 +252,16 @@ export const getAllTasksQueryFn = async ({
   return response.data;
 };
 
-export const deleteTaskMutationFn = async () => {};
+export const deleteTaskMutationFn = async ({
+  workspaceId,
+  taskId,
+}: {
+  workspaceId: string;
+  taskId: string;
+}): Promise<{
+  message: string;
+}> => {
+  const response = await API.delete(`task/${taskId}/workspace/${workspaceId}/delete`);
+  return response.data;
+};
 

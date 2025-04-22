@@ -45,7 +45,7 @@ export const loginOrCreateAccountService = async (data: {
 
       const workspace = new WorkspaceModel({
         name: 'My Workspace', // Default workspace name
-        description: `Workspace created for ${user.name}}`, // Description for the workspace
+        description: `Workspace created for ${user.name}`, // Description for the workspace
         owner: user._id, // Set the user as the owner of the workspace
       });
       await workspace.save({ session }); // Save the workspace in the database within the session
@@ -108,7 +108,7 @@ export const registerUserService = async (body: {
 
     const workspace = new WorkspaceModel({
       name: 'My Workspace',
-      description: `Workspace created for ${user.name}}`,
+      description: `Workspace created for ${user.name}`,
       owner: user._id,
     });
     await workspace.save({ session });

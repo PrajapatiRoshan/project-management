@@ -189,7 +189,11 @@ export const getColumns = (projectId?: string): ColumnDef<TaskType>[] => {
       cell: ({ row }) => {
         return (
           <>
-            <DataTableRowActions row={row} />
+            <DataTableRowActions
+              row={row}
+              projectId={projectId || ''}
+              key={row.toString()}
+            />
           </>
         );
       },

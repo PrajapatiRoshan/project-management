@@ -44,7 +44,6 @@ export default function CreateWorkspaceForm({ onClose }: { onClose: () => void }
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // console.log(values);
     if (isPending) return;
 
     mutate(values, {

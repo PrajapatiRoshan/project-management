@@ -211,17 +211,29 @@ export type ProjectByIdPayloadType = {
 //********** */ TASK TYPES ************************
 //************************************************* */
 
+export type TaskData = {
+  title: string;
+  description: string;
+  priority: TaskPriorityEnumType;
+  status: TaskStatusEnumType;
+  assignedTo: string;
+  dueDate: string;
+};
+
 export type CreateTaskPayloadType = {
   workspaceId: string;
   projectId: string;
-  data: {
-    title: string;
-    description: string;
-    priority: TaskPriorityEnumType;
-    status: TaskStatusEnumType;
-    assignedTo: string;
-    dueDate: string;
-  };
+  data: TaskData;
+};
+
+export type EditByIdPayloadType = {
+  workspaceId: string;
+  projectId: string;
+  taskId: string;
+};
+
+export type UpdateByIdPayloadType = EditByIdPayloadType & {
+  data: TaskData;
 };
 
 export type TaskType = {
@@ -245,6 +257,30 @@ export type TaskType = {
   taskcode: string;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type TaskTypeById = {
+  _id: string;
+  title: string;
+  description?: string;
+  project?: string;
+  priority: TaskPriorityEnumType;
+  status: TaskStatusEnumType;
+  assignedTo: {
+    _id: string;
+    name: string;
+    profilePicture: string | null;
+  } | null;
+  createdBy?: string;
+  dueDate: string;
+  taskcode: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type TaskResponseType = {
+  message: 'Task created successfully';
+  task: TaskTypeById;
 };
 
 export type AllTaskPayloadType = {

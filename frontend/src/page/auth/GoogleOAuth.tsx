@@ -12,8 +12,6 @@ const GoogleOAuth = () => {
   const accessToken = params.get('access_token');
   const currentWorkspace = params.get('current_workspace');
 
-  console.log(accessToken, currentWorkspace);
-
   useEffect(() => {
     if (accessToken) {
       setAccessToekn(accessToken);

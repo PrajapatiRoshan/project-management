@@ -53,8 +53,7 @@ export default function CreateTaskForm(props: {
     skip: !!projectId,
   });
 
-  const { data: memberData, isLoading: isMemberLoading } =
-    useGetWorkspaceMembers(workspaceId);
+  const { data: memberData } = useGetWorkspaceMembers(workspaceId);
 
   const projects = data?.projects || [];
   const members = memberData?.members || [];
