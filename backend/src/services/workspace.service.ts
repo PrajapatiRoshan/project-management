@@ -88,7 +88,7 @@ export const getWorkspaceMembersService = async (workspaceId: string) => {
 export const getWorkspaceAnalyticsService = async (workspaceId: string) => {
   const currentDate = new Date(); // Get the current date
   const totalTasks = await TaskModel.countDocuments({ workspace: workspaceId }); // Count total tasks in the workspace
-  const overDueTasks = await TaskModel.countDocuments({
+  const overdueTask = await TaskModel.countDocuments({
     workspace: workspaceId, // Filter by workspace ID
     dueDate: { $lt: currentDate }, // Filter tasks with due dates in the past
     status: { $ne: TaskStatusEnum.DONE }, // Exclude completed tasks
@@ -100,7 +100,7 @@ export const getWorkspaceAnalyticsService = async (workspaceId: string) => {
 
   const analytics = {
     totalTasks, // Total number of tasks
-    overDueTasks, // Number of overdue tasks
+    overdueTask, // Number of overdue tasks
     completedTasks, // Number of completed tasks
   };
 

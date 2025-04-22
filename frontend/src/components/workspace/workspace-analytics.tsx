@@ -42,7 +42,7 @@ const WorkspaceAnalytics = () => {
       <AnalyticsCard
         isLoading={isPending}
         title={'Overdue Task'}
-        value={analytics?.overDueTasks || 0}
+        value={analytics?.overdueTask || 0}
       />
       <AnalyticsCard
         isLoading={isPending}
