@@ -6,7 +6,7 @@ Monkey is a powerful, scalable multi-tenancy project management platform built f
 
 ## 🚀 Demo
 
-> Live Link (coming soon...)
+> Live Link [Monkey - Project management](https://prajapatiroshan.github.io/project-management)
 
 ---
 
