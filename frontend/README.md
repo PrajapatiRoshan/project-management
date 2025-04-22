@@ -1,50 +1,121 @@
-# React + TypeScript + Vite
+## 🔗 API Endpoints
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Below is a comprehensive list of backend API endpoints grouped by functionality, along with example URLs.
 
-Currently, two official plugins are available:
+### 🔐 Authentication
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Login**  
+  `POST /auth/login`  
+  Example: `http://localhost:8000/auth/login`
 
-## Expanding the ESLint configuration
+- **Register**  
+  `POST /auth/register`  
+  Example: `http://localhost:8000/auth/register`
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **Logout**  
+  `POST /auth/logout`  
+  Example: `http://localhost:8000/auth/logout`
 
-- Configure the top-level `parserOptions` property like this:
+- **Get Current User**  
+  `GET /user/current`  
+  Example: `http://localhost:8000/user/current`
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+---
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+### 🏢 Workspaces
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+- **Create Workspace**  
+  `POST /workspace/create/new`  
+  Example: `http://localhost:8000/workspace/create/new`
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+- **Edit Workspace**  
+  `PUT /workspace/update/{workspaceId}`  
+  Example: `http://localhost:8000/workspace/update/12345`
+
+- **Get Workspace by ID**  
+  `GET /workspace/{workspaceId}`  
+  Example: `http://localhost:8000/workspace/12345`
+
+- **Get All Workspaces for User**  
+  `GET /workspace/all`  
+  Example: `http://localhost:8000/workspace/all`
+
+- **Get Members in Workspace**  
+  `GET /workspace/members/{workspaceId}`  
+  Example: `http://localhost:8000/workspace/members/12345`
+
+- **Get Workspace Analytics**  
+  `GET /workspace/analytics/{workspaceId}`  
+  Example: `http://localhost:8000/workspace/analytics/12345`
+
+- **Change Member Role in Workspace**  
+  `PUT /workspace/change/member/role/{workspaceId}`  
+  Example: `http://localhost:8000/workspace/change/member/role/12345`
+
+- **Delete Workspace**  
+  `DELETE /workspace/delete/{workspaceId}`  
+  Example: `http://localhost:8000/workspace/delete/12345`
+
+---
+
+### 👥 Members
+
+- **Join Workspace via Invite Code**  
+  `POST /member/workspace/{inviteCode}/join`  
+  Example: `http://localhost:8000/member/workspace/abc123/join`
+
+---
+
+### 📊 Projects
+
+- **Create Project**  
+  `POST /project/workspace/{workspaceId}/create`  
+  Example: `http://localhost:8000/project/workspace/12345/create`
+
+- **Edit Project**  
+  `PUT /project/{projectId}/workspace/{workspaceId}/update`  
+  Example: `http://localhost:8000/project/67890/workspace/12345/update`
+
+- **Get All Projects in Workspace**  
+  `GET /project/workspace/{workspaceId}/all?pageSize={pageSize}&pageNumber={pageNumber}`  
+  Example: `http://localhost:8000/project/workspace/12345/all?pageSize=10&pageNumber=1`
+
+- **Get Project by ID**  
+  `GET /project/{projectId}/workspace/{workspaceId}`  
+  Example: `http://localhost:8000/project/67890/workspace/12345`
+
+- **Get Project Analytics**  
+  `GET /project/{projectId}/workspace/{workspaceId}/analytics`  
+  Example: `http://localhost:8000/project/67890/workspace/12345/analytics`
+
+- **Delete Project**  
+  `DELETE /project/{projectId}/workspace/{workspaceId}/delete`  
+  Example: `http://localhost:8000/project/67890/workspace/12345/delete`
+
+---
+
+### ✅ Tasks
+
+- **Create Task**  
+  `POST /task/projects/{projectId}/workspace/{workspaceId}/create`  
+  Example: `http://localhost:8000/task/projects/67890/workspace/12345/create`
+
+- **Get Task by ID**  
+  `GET /task/{taskId}/project/{projectId}/workspace/{workspaceId}`  
+  Example: `http://localhost:8000/task/11111/project/67890/workspace/12345`
+
+- **Edit Task**  
+  `PUT /task/{taskId}/projects/{projectId}/workspace/{workspaceId}/update`  
+  Example: `http://localhost:8000/task/11111/projects/67890/workspace/12345/update`
+
+- **Get All Tasks**  
+  `GET /task/workspace/{workspaceId}/all?keyword={keyword}&assignedTo={assignedTo}&priority={priority}&status={status}&dueDate={dueDate}&pageNumber={pageNumber}&pageSize={pageSize}`  
+  Example: `http://localhost:8000/task/workspace/12345/all?pageNumber=1&pageSize=10`
+
+- **Delete Task**  
+  `DELETE /task/{taskId}/workspace/{workspaceId}/delete`  
+  Example: `http://localhost:8000/task/11111/workspace/12345/delete`
+
+---
+
+This section provides a clear overview of all backend API endpoints, making it easier for developers to integrate and test the application.

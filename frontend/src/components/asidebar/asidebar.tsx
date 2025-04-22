@@ -51,7 +51,7 @@ const Asidebar = () => {
                 to={`/workspace/${workspaceId}`}
                 className="hidden md:flex ml-2 items-center gap-2 self-center font-medium"
               >
-                Roshan_Prajapati
+                Monkey
               </Link>
             )}
           </div>

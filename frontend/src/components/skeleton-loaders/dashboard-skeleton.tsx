@@ -8,7 +8,7 @@ export function DashboardSkeleton() {
       <div className="absolute inset-0 z-50 flex items-start pt-10 justify-center bg-[rgba(255,255,255,.01)]">
         <div className="flex items-center space-x-2">
           <Loader size="25px" className="animate-spin" />
-          <span className="text-sm font-medium">Prajapati...</span>
+          <span className="text-sm font-medium">Monkey...</span>
         </div>
       </div>
 
