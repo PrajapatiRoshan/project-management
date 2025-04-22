@@ -51,7 +51,7 @@ export const getColumns = (projectId?: string): ColumnDef<TaskType>[] => {
             <Badge variant="outline" className="capitalize shrink-0 h-[25px]">
               {row.original.taskcode}
             </Badge>
-            <span className="block lg:max-w-[220px] max-w-[200px] font-medium">
+            <span className="block truncate lg:max-w-[220px] max-w-[200px] font-medium text-ellipsis">
               {row.original.title}
             </span>
           </div>
