@@ -10,9 +10,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "roshan prajapati",
   "license": "ISC",
-  "description": "",
+  "description": "Backend for monkey website (project managmenet)",
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cookie-session": "^2.1.0",
@@ -46,3 +46,4 @@
     "typescript": "^5.7.2"
   }
 }
+

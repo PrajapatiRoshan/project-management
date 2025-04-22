@@ -1,0 +1,45 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # Ensure full repo checkout
+
+      - name: Debug - Show root folder structure
+        run: ls -la # Check if Frontend folder exists
+
+      - name: Debug - Show current directory
+        run: pwd # Confirm working directory
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./frontend # Update folder name
+
+      - name: Build project
+        run: npm run build
+        working-directory: ./frontend # Update folder name
+        env:
+          VITE_BASE_URL: ${{ secrets.VITE_BASE_URL }}
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }} # Uses GitHub token
+          publish_branch: gh-pages # Specifies the correct branch
+          publish_dir: ./frontend/dist
+
