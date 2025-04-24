@@ -11,6 +11,22 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Monkey</title>
+    <script>
+      (function () {
+        const is404 = location.pathname.includes('404.html');
+        const alreadyRedirected = sessionStorage.getItem('redirected');
+
+        if (!is404 && !alreadyRedirected) {
+          const current = location.pathname + location.search + location.hash;
+          const redirect =
+            '/project-management' + current.replace('/project-management', '');
+          sessionStorage.setItem('redirected', 'true');
+          window.location.replace(redirect);
+        } else {
+          sessionStorage.removeItem('redirected'); // Clean up
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
