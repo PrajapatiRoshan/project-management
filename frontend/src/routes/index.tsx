@@ -1,4 +1,4 @@
-import { Route, Routes, HashRouter } from 'react-router-dom';
+import { Route, Routes, BrowserRouter } from 'react-router-dom';
 import ProtectedRoute from './protected.route';
 import AuthRoute from './auth.route';
 import {
@@ -12,8 +12,7 @@ import NotFound from '@/page/errors/NotFound';
 
 function AppRoutes() {
   return (
-    // <BrowserRouter>
-    <HashRouter>
+    <BrowserRouter basename="/project-management">
       <Routes>
         <Route element={<BaseLayout />}>
           {baseRoutePaths.map((route) => (
@@ -40,8 +39,7 @@ function AppRoutes() {
         {/* Catch-all for undefined routes */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </HashRouter>
-    // </BrowserRouter>
+    </BrowserRouter>
   );
 }
 

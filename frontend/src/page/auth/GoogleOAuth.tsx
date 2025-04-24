@@ -9,6 +9,7 @@ const GoogleOAuth = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { setAccessToekn } = useStore();
+
   const accessToken = params.get('access_token');
   const currentWorkspace = params.get('current_workspace');
 
